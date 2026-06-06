@@ -1,9 +1,13 @@
 ---
 name: keep-me-in-the-loop
-description: Keeps the user in the loop by writing timestamped Markdown progress check-ins to a `.loop/` directory. Use automatically right after a critical implementation decision, a large/massive code change, adding a new test (TDD red), or tests turning green (TDD pass) — and on a recurring timer (default 5 minutes, customizable). Each entry records where the work has reached, what is done, and the critical decisions made with their rationale.
-when_to_use: Invoke after critical implementation/architecture decisions, large refactors or multi-file changes, when a new test is added, when a previously failing test passes, and on each timer tick when run under /loop. Also invoke directly with /keep-me-in-the-loop to write a check-in now.
+description: Writes timestamped Markdown progress check-ins to a `.loop/` directory so the user can step away and still know exactly where the work stands. Each entry captures where the work has reached, what's done since last time, and the critical decisions made with their rationale. Use proactively while building — not only when asked.
+when_to_use: Write a check-in right after a critical or hard-to-reverse implementation/architecture decision, a large or multi-file change, adding a failing test (TDD red), or a test going green (TDD pass); on each tick when run under `/loop`; and whenever the user runs `/keep-me-in-the-loop` or asks for a progress update or status.
 allowed-tools: Write, Edit, Read, Bash(bash *), Bash(date *), Bash(mkdir *), Bash(ls *), Bash(cat *)
+disallowed-tools: AskUserQuestion
 argument-hint: "[interval e.g. 5m | trigger label]"
+metadata:
+  version: 1.1.0
+  tags: progress, journal, check-in, loop, tdd, status
 ---
 
 # Keep me in the loop
@@ -45,7 +49,14 @@ interval. The user controls the interval; **default is 5 minutes**.
   ```
   /loop 10m /keep-me-in-the-loop
   ```
+- **Self-paced** (omit the interval to let the model decide when to check in):
+  ```
+  /loop /keep-me-in-the-loop
+  ```
 - **Stop** the timed loop the same way you stop any `/loop`.
+
+`/loop` explicitly takes a slash command as its prompt, so passing `/keep-me-in-the-loop`
+is supported and re-invokes this skill each tick.
 
 If this skill is invoked with an interval argument (e.g. `/keep-me-in-the-loop 10m`) and no
 loop is currently running, tell the user the exact `/loop <interval> /keep-me-in-the-loop`
@@ -118,6 +129,10 @@ existing entry — the journal is append-only history.
   should stay local, add `.loop/` to `.gitignore` (ask the user once).
 - This skill only records state; it never changes the cadence on its own. The user owns the
   interval via `/loop`.
+- A check-in must never derail the work, so the skill disallows `AskUserQuestion` while
+  active — it records what it knows and moves on rather than blocking on a prompt. (The
+  restriction clears on the user's next message, so any genuinely needed question, such as
+  the one-time `.gitignore` choice, can still be raised in passing.)
 
 ## References
 

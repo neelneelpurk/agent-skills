@@ -27,7 +27,13 @@ Each dimension below has: **the symptom** to listen for, **probing questions** t
 - When it misses, are you usually naming the skill explicitly, or describing the task in your own way?
 - Are there phrasings, file types, or contexts you use a lot that the description never mentions?
 
-**Where the fix lives.** The `description`. Two failure shapes, two fixes:
+**Check the frontmatter levers before touching the prose.** Triggering is decided mostly by the `description`, but several frontmatter fields can block a skill outright — and when one of these is the cause, no wording change will ever fix it:
+- `disable-model-invocation: true` — the model can't auto-load the skill at all; only the user can invoke it with `/name`. If the complaint is "it never fires on its own," this is the first thing to rule out.
+- `user-invocable: false` — hidden from the `/` menu (it can still auto-trigger). The opposite complaint: "I can't call it manually."
+- `paths` — scopes auto-activation to matching files; if the user works outside those globs, it stays quiet.
+- The combined `description` + `when_to_use` text is truncated at ~1536 characters in the skill listing, so triggers buried past that cap are effectively invisible — put the key use case first.
+
+**Where the prose fix lives.** The `description` (plus `when_to_use`). Two failure shapes, two fixes:
 - *Undertriggering* → broaden and make the description a little "pushy." Add the real phrasings, synonyms, file types, and contexts the user actually uses, including cases where they don't name the skill outright. Spell out "use this even when…" situations.
 - *Overtriggering* → tighten. Name the adjacent tasks it should *not* handle, and sharpen the boundary against whatever neighboring skill should win those.
 

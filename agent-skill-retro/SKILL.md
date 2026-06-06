@@ -1,6 +1,9 @@
 ---
 name: agent-skill-retro
 description: Run a structured retrospective on an existing agent skill and fold the findings back into it. Use this whenever the user wants to review, critique, debug, refine, tune, or improve a skill they have been using — phrasings like "let's do a retro on my X skill", "this skill keeps mis-firing", "the skill ignored its own instructions", "update my skill based on how it went", "my skill is stale / too long", or "why isn't my skill triggering". The skill facilitates a guided interview across the common ways skills fail (triggering, instruction-following, coverage gaps, stale facts, bloat, repeated work), folds in real usage evidence when the user provides it, then proposes a prioritized changelog and applies the edits in place after the user approves. Trigger even when the user only says they want to "go over" or "reflect on" how a skill performed, or hands you a SKILL.md and says it needs work.
+metadata:
+  version: 1.1.0
+  tags: skills, retro, review, triggering, self-improvement, maintenance
 ---
 
 # Agent Skill Retro
@@ -23,7 +26,7 @@ Work through these in order, but stay flexible — if the user already knows exa
 
 The target skill is installed, so find it rather than asking the user to paste it.
 
-- If the user gave a path, read the `SKILL.md` there. If they only named the skill, look for it under the usual skills locations (e.g. `/mnt/skills/`, a project's `skills/` or `.claude/skills/` directory, or wherever this environment keeps them) and confirm you've got the right one before going further.
+- If the user gave a path, read the `SKILL.md` there. If they only named the skill, search the standard locations and confirm you've got the right one before going further: **personal** skills under `~/.claude/skills/<name>/`, **project** skills under the repo's `.claude/skills/<name>/`, and **plugin** skills under `~/.claude/plugins/` (these are usually read-only and shared — see Phase 5 about editing a copy). If the same name exists in more than one location, confirm with the user which copy they actually use before retro'ing it.
 - Read the **whole** `SKILL.md`, not just the description. Then inventory bundled resources — `scripts/`, `references/`, `assets/` — and note which the body actually points to. A reference file that nothing points to, or a script the body never mentions, is itself a finding.
 - Build a quick mental model you can say back to the user in a sentence or two: *"This skill helps with X, triggers on Y, and bundles a script for Z."* Getting this reflected back early catches the case where you're even looking at the wrong skill.
 
@@ -37,7 +40,7 @@ Open with something that surfaces lived experience, e.g. *"Tell me about the las
 
 **The dimensions to probe** (compact form — the expanded question bank with examples is in `references/retro-dimensions.md`; read it when you want depth or the user wants a thorough retro):
 
-- **Triggering** — Did it fire when it should have, and stay quiet when it shouldn't? Undertriggering (the skill exists but the agent didn't reach for it) is the most common skill failure, and it almost always traces back to the `description`. Ask for examples of both misses and false-fires.
+- **Triggering** — Did it fire when it should have, and stay quiet when it shouldn't? Undertriggering (the skill exists but the agent didn't reach for it) is the most common skill failure, and it usually traces back to the `description`. But check the frontmatter levers too: `disable-model-invocation: true` stops the model from auto-loading it at all, `user-invocable: false` hides it from the `/` menu, and `paths` can scope it to certain files — a "won't trigger" complaint sometimes has nothing to do with the description. Ask for examples of both misses and false-fires.
 - **Instruction adherence** — When it did fire, did the agent follow it? Or did it follow some rigid rule so literally that it wasted effort or produced something stilted? Both "ignored the guidance" and "obeyed a bad rule too well" are findings.
 - **Coverage gaps** — Was there a case the skill simply didn't speak to — an edge case, a new sub-task, an input shape it didn't anticipate? These become new or extended sections.
 - **Accuracy & freshness** — Anything in the skill that's now wrong or stale? Changed APIs, renamed tools, outdated paths, advice that no longer holds. Skills rot quietly.
@@ -79,9 +82,12 @@ For each proposed change, show enough to judge it — a short before/after for e
 
 Close by summarizing what changed and what the user should watch for next time they use the skill — that watch-list becomes the seed for the next retro.
 
-## When to hand off to skill-creator
+## Related skills — when to use which
 
-This skill is the retro-driven improvement loop: reflect on lived usage, then patch. If the user wants the heavier machinery — running the skill against test prompts, quantitative benchmarking, or the automated description-optimization loop for triggering accuracy — that lives in the `skill-creator` skill. Point them there rather than reinventing it. The two compose well: retro to decide *what* to change, skill-creator's eval tooling to *verify* the change helped.
+This skill is the retro-driven improvement loop: an **interactive deep-dive on one skill**, reflecting on lived usage, then patching it. Two siblings cover adjacent needs:
+
+- **`update-skills-from-learnings`** — when the agent has accumulated `.claude/learnings/` files and the user wants those lessons **batch-folded across many skills** at once. Reach for it instead of this skill when the input is a pile of captured mistakes rather than one skill to reflect on.
+- **`skill-creator`** — the heavier machinery: running the skill against test prompts, quantitative benchmarking, or the automated description-optimization loop for triggering accuracy. Point the user there rather than reinventing it. The two compose well: retro to decide *what* to change, skill-creator's eval tooling to *verify* the change helped.
 
 ## A few principles to keep in mind
 

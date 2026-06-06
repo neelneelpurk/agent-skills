@@ -1,6 +1,9 @@
 ---
 name: capture-learning
 description: Record a lesson whenever something goes wrong so the agent never repeats it. Use this skill the moment a mistake, failure, or correction happens - a command errors out, a test fails unexpectedly, an approach gets abandoned, the user corrects the agent or says "no, do it this way", an assumption turns out wrong, or any avoidable rework occurs. Writes one timestamped Markdown file per learning into the current project's .claude/learnings/ directory, capturing what happened, the root cause, and the correct approach. Trigger proactively even when the user does not explicitly say to "log", "save", or "remember" it - capturing the lesson in the moment is the entire point. Pairs with the update-skills-from-learnings skill, which later folds these lessons back into the agent's skills.
+metadata:
+  version: 1.1.0
+  tags: learning, mistakes, self-improvement, postmortem, notes
 ---
 
 # Capture Learning
@@ -21,6 +24,8 @@ Capture a learning as soon as any of these occur. Don't wait to be asked.
 - A task took noticeably longer than it should have because of an avoidable misstep.
 
 Do **not** capture trivia: ordinary tool output, successful steps, transient network blips that resolved on retry, or anything that carries no reusable lesson. Aim for signal, not a diary.
+
+**Learnings vs. durable memory.** A learning is a *project-scoped record of a mistake and its fix*, meant to be folded back into a skill later. It is not the place for durable facts about the user or their stable preferences ("prefers tabs", "deploys on Fridays") — if you have a persistent memory system, those belong there. Rule of thumb: a correctable *mistake the agent made* → learning here; a *standing fact or preference* → memory.
 
 ## Where learnings live
 

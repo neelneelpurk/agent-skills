@@ -1,6 +1,9 @@
 ---
 name: update-skills-from-learnings
-description: Fold accumulated learnings back into the agent's skills so lessons become permanent. Use this skill when the user wants to consolidate, review, or apply what the agent has learned - phrases like "update my skills from the learnings", "fold in the lessons", "improve my skills based on what went wrong", or during periodic cleanup. Reads the unprocessed learning files in the current project's .claude/learnings/ directory, maps each to the most relevant skill(s) under ~/.claude/skills/, and proposes concrete edits as diffs. Always proposes and waits for explicit approval before changing any skill, then applies only the approved edits and marks those learnings as folded-in. Can also propose creating a brand-new skill when a lesson fits nowhere. Pairs with the capture-learning skill that records the lessons in the first place.
+description: Fold accumulated learnings back into the agent's skills so lessons become permanent. Use this skill when the user wants to consolidate, review, or apply what the agent has learned - phrases like "update my skills from the learnings", "fold in the lessons", "improve my skills based on what went wrong", or during periodic cleanup. Reads the unprocessed learning files in the current project's .claude/learnings/ directory, maps each to the most relevant skill(s) across the agent's personal and project skill directories, and proposes concrete edits as diffs. Always proposes and waits for explicit approval before changing any skill, then applies only the approved edits and marks those learnings as folded-in. Can also propose creating a brand-new skill when a lesson fits nowhere. Pairs with the capture-learning skill that records the lessons, and with agent-skill-retro for interactive, single-skill tune-ups.
+metadata:
+  version: 1.1.0
+  tags: skills, learnings, self-improvement, maintenance, folding
 ---
 
 # Update Skills From Learnings
@@ -12,7 +15,7 @@ Close the loop on self-improvement. The `capture-learning` skill records mistake
 ## Inputs
 
 - **Learnings** (input): `.claude/learnings/*.md` at the root of the current project, written by `capture-learning`. Learnings are per-project, so run this skill from inside the project whose lessons you want to fold in. The user may also point you at a specific directory.
-- **Skills** (target of edits): the agent's personal skills under `~/.claude/skills/`, each a folder containing a `SKILL.md`.
+- **Skills** (target of edits): the agent's skills, each a folder containing a `SKILL.md`. These live in two writeable places — **personal** skills under `~/.claude/skills/` and **project** skills under the repo's `.claude/skills/`. Check both. A learning captured in a project often maps to that project's own skill. **Plugin/marketplace skills** (under `~/.claude/plugins/`) are typically read-only and shared — don't edit them in place; if a lesson belongs to one, flag it for the user rather than patching it.
 
 ## Procedure
 
@@ -29,13 +32,14 @@ If there are no unprocessed learnings, say so and stop — there's nothing to fo
 
 ### 2. Inventory the skills
 
-List the skill folders and read each `SKILL.md`'s frontmatter `name` and `description`; skim the body enough to know what each skill covers and how it's organized.
+List the skill folders in both writeable locations and read each `SKILL.md`'s frontmatter `name` and `description`; skim the body enough to know what each skill covers and how it's organized.
 
 ```bash
-ls ~/.claude/skills/
+ls ~/.claude/skills/ 2>/dev/null                       # personal skills
+ls "$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/skills/" 2>/dev/null  # project skills
 ```
 
-Build a quick mental map of `skill name -> what it's responsible for`. You'll match learnings against this.
+Build a quick mental map of `skill name -> what it's responsible for` (note which location each lives in, since that's where its edit lands). You'll match learnings against this.
 
 ### 3. Map each learning to a target
 
@@ -78,13 +82,12 @@ Suggested summary format:
 
 For each approved edit, make the precise change to the skill's `SKILL.md` (or other skill files). Use exact, surgical edits — match the surrounding text and change only what's needed. Leave un-approved targets untouched.
 
-If a tooling check is available, validate edited skills before finishing:
-
-```bash
-python /path/to/skill-creator/scripts/quick_validate.py ~/.claude/skills/<edited-skill>
-```
-
-(If `quick_validate.py` isn't present in this environment, just re-read the edited `SKILL.md` to confirm the frontmatter is still well-formed and the file reads cleanly.)
+Validate each edited skill before finishing. Re-read the `SKILL.md` and confirm the
+frontmatter still holds: `name` unchanged and kebab-case (≤64 chars), `description` present
+with no angle brackets and within 1024 chars, and `description` + `when_to_use` combined
+under the ~1536-char listing cap. If the `skill-creator` or `write-a-skill` skill is
+installed, use its validator/packager rather than rolling your own; otherwise the re-read
+check above is sufficient.
 
 ### 7. Mark the learnings
 
